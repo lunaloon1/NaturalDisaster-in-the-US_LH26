@@ -77,48 +77,48 @@ function draw() {
     noLoop();
 }
 */
+
 let table;
 let circles = [];
-let cols = 6; 
+let cols = 6;
 let circleSize = 60;
 let spacing = 120;
 let hoveredCircle = null;
 let clickedCircle = null;
-let font;
 
 function preload() {
-  font = loadFont('https://cdnjs.cloudflare.com/ajax/libs/topcoat/0.8.0/font/SourceCodePro-Regular.otf');
-
-  // Load CSV from the project folder
-  // Make sure the file is named exactly "califire2.csv" (case-sensitive)
+  // Load CSV from the same folder
   table = loadTable('califire2.csv', ',', 'header');
 }
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
-  textFont(font);
   textSize(16);
   textAlign(CENTER, CENTER);
 
   let damageNumbers = [];
 
+  // Parse CSV column 2 (damage)
   if (table && table.getRowCount() > 0) {
-    let damageCol = table.getColumn(2); // column with damage
+    let damageCol = table.getColumn(2);
     for (let d of damageCol) {
       let n = parseFloat(d);
       damageNumbers.push(isNaN(n) ? 0 : n);
     }
-  } else {
-    // Fallback data if CSV fails
+  }
+
+  // Fallback if CSV fails
+  if (damageNumbers.length === 0) {
     damageNumbers = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10];
   }
 
-  // Sort indices high → low
+  // Sort high → low
   let sortedIndices = damageNumbers
     .map((val, idx) => ({ val, idx }))
     .sort((a, b) => b.val - a.val)
     .map(o => o.idx);
 
+  // Create circle objects
   for (let i = 0; i < sortedIndices.length; i++) {
     let idx = sortedIndices[i];
     let col = i % cols;
@@ -190,6 +190,7 @@ function draw() {
     text(c.damage, c.x, c.y);
   }
 
+  // Dim background on click
   if (clickedCircle) {
     push();
     fill(0, 80);
