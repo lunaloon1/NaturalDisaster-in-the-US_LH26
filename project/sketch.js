@@ -1,208 +1,137 @@
-/* let currentScene = "map";
-let oceanOffset = 0;
+let bgGif;
+let mapImg;
 
-let disasterData = {
-    //Data ranging from 2010-2020. WILL STILL TWEAK DEPENDING ON RESEARCH. NUMBERS NOT FINAL//
-    California: {type: "wildfire", total_events: 70000,  average_severity: 5, total_damage_billions: 53.5, total_deaths: 250},
-    Alaska: {type: "earthquake", total_events: 450000, average_severity: 4, total_damage_billions: 0, total_deaths: 0},
-    Florida: {type: "hurricane", total_events: 0, average_severity: 0, total_damage_billions: 0, total_deaths: 0},
-    Texas: {type: "tornado", total_events: 0, average_severity: 0, total_damage_billions: 0, total_deaths: 0}
-}
-// STATE CLICKABLE AREAS
-let stateBoxes = {
-Califronia : {x: 100, y: 300, width: 80, height: 80},
-Alaska : {x: 50, y: 50, width: 100, height: 100},
-Florida : {x: 600, y: 400, width: 60, height: 60},
-Texas : {x: 400, y: 350, width: 100, height: 100},
-};
+let factory, city, ocean, forest, barn;
 
-function setup() {
-    createCanvas(windowWidth, windowHeight);
-}
-
-function draw() {
-    background(20);
-    drawOcean();
-    if (currentScene === "map") {
-        drawMap();
-    } else if (currentScene === "wildfire") {
-        wildfireScene();
-    } else if (currentScene === "earthquake") {
-        earthquakeScene();
-    } else if (currentScene === "hurricane") {
-        hurricaneScene();
-    } else if (currentScene === "tornado") {
-        tornadoScene();
-    }   }
-
-//BACKGROUND OCEAN ANIMATION
-function drawOcean() {
-    oceanOffset += 0.1;
-    for (let x = 0; x < width; x += 20) {
-        stroke(10,30,80);
-        let wave = map(noise(y * 0.02 + oceanOffset), 0, 1, -10, 10);
-        AudioListener(0, y + wave, width, y + wave);
-    }   } */
-
-/*let table;
-let damage, state, incidentStartDate;
-
-async function setup() {
-  createCanvas(windowWidth, windowHeight);
-  table = await loadTable('/DATA/califire2.csv',',','header');
-  console.log(table);
-  damage = table.getColumn(2)
-  state = table.getColumn(8)
-incidentStartDate = table.getColumn(16)
-}
-
-function draw() {
-  background(220);
-  if (table){
-    for (let i = 0; i < table.getRowCount(); i++){
-        let textX = random(width);
-        let textY = random(height);
-        let scale = width * 0.01;
-      
-        //noStroke();
-        fill(255); 
-        circle(textX, textY, state[i]*scale);
-
-        textAlign(CENTER, CENTER);
-        fill(0);
-        text(damage[i], textX, textY);
-        
-
-    }   }
-    noLoop();
-}
-*/
-
-let table;
-let circles = [];
-let cols = 6;
-let circleSize = 60;
-let spacing = 120;
-let hoveredCircle = null;
-let clickedCircle = null;
+let icons = [];
 
 function preload() {
-  // Load CSV from the same folder
-  table = loadTable('califire2.csv', ',', 'header');
+  bgGif = loadImage("assets/animated_bg.gif");
+  mapImg = loadImage("assets/background.png");
+
+  factory = loadImage("assets/factory_tight.png");
+  city = loadImage("assets/city_tight.png");
+  ocean = loadImage("assets/beach_palm_tight.png");
+  forest = loadImage("assets/forest_stumps_tight.png");
+  barn = loadImage("assets/cow_tight.png");
 }
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
-  textSize(16);
-  textAlign(CENTER, CENTER);
+  textFont("Arial");
 
-  let damageNumbers = [];
-
-  // Parse CSV column 2 (damage)
-  if (table && table.getRowCount() > 0) {
-    let damageCol = table.getColumn(2);
-    for (let d of damageCol) {
-      let n = parseFloat(d);
-      damageNumbers.push(isNaN(n) ? 0 : n);
-    }
-  }
-
-  // Fallback if CSV fails
-  if (damageNumbers.length === 0) {
-    damageNumbers = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10];
-  }
-
-  // Sort high → low
-  let sortedIndices = damageNumbers
-    .map((val, idx) => ({ val, idx }))
-    .sort((a, b) => b.val - a.val)
-    .map(o => o.idx);
-
-  // Create circle objects
-  for (let i = 0; i < sortedIndices.length; i++) {
-    let idx = sortedIndices[i];
-    let col = i % cols;
-    let row = floor(i / cols);
-    let x = col * spacing + spacing / 2 + 50;
-    let y = row * spacing + spacing / 2 + 50;
-
-    let severity = damageNumbers[idx] / max(damageNumbers);
-    let colColor = lerpColor(color(255, 220, 180), color(255, 140, 0), severity);
-
-    circles.push({
-      x: x,
-      y: y,
-      baseX: x,
-      baseY: y,
-      size: circleSize,
-      damage: damageNumbers[idx],
-      severity: severity,
-      color: colColor,
-      angleOffset: random(TWO_PI)
-    });
-  }
+  icons = [
+    { img: factory, x: 0.111, y: 0.077, scale: 0.647, link: "factory.html", label: "Industrial Emissions" },
+    { img: city, x: 0.42, y: 0.39, scale: 0.8, link: "city.html", label: "Urban Pollution" },
+    { img: ocean, x: 0.152, y: 0.5972, scale: 0.83, link: "ocean.html", label: "Ocean Contamination" },
+    { img: forest, x: 0.685, y: 0.64, scale: 0.83, link: "forest.html", label: "Deforestation" },
+    { img: barn, x: 0.538, y: 0.1, scale: 0.893, link: "barn.html", label: "Agriculture & Methane" }
+  ];
 }
 
 function draw() {
-  // Dark blue gradient background
-  for (let y = 0; y < height; y++) {
-    let inter = map(y, 0, height, 0, 1);
-    let c = lerpColor(color(10, 20, 40), color(20, 40, 80), inter);
-    stroke(c);
-    line(0, y, width, y);
-  }
-  noStroke();
+  background(0);
 
-  hoveredCircle = null;
+  let mapRatio = mapImg.width / mapImg.height;
+  let screenRatio = width / height;
 
-  for (let c of circles) {
-    let d = dist(mouseX, mouseY, c.x, c.y);
-    if (d < c.size / 2) hoveredCircle = c;
+  let drawWidth, drawHeight;
 
-    let hoverScale = 1;
-    if (hoveredCircle === c && clickedCircle !== c) {
-      hoverScale = 1.1;
-      c.color = lerpColor(color(255, 140, 0), color(200, 100, 0), 0.3);
-    } else {
-      c.color = lerpColor(color(255, 220, 180), color(255, 140, 0), c.severity);
-    }
-
-    let hoverAnim = 0;
-    if (hoveredCircle === c && clickedCircle !== c) hoverAnim = 5 * sin(frameCount * 0.1 + c.angleOffset);
-
-    if (clickedCircle === c) {
-      c.x = lerp(c.x, width / 2, 0.1);
-      c.y = lerp(c.y, height / 2, 0.1);
-      hoverScale = lerp(hoverScale, 2.0, 0.1);
-    } else {
-      c.x = c.baseX;
-      c.y = c.baseY + hoverAnim;
-    }
-
-    push();
-    drawingContext.shadowBlur = 25;
-    drawingContext.shadowColor = 'rgba(0,0,0,0.5)';
-    fill(c.color);
-    ellipse(c.x, c.y, c.size * hoverScale);
-    pop();
-
-    fill(0);
-    text(c.damage, c.x, c.y);
+  if (screenRatio > mapRatio) {
+    drawHeight = height;
+    drawWidth = height * mapRatio;
+  } else {
+    drawWidth = width;
+    drawHeight = width / mapRatio;
   }
 
-  // Dim background on click
-  if (clickedCircle) {
-    push();
-    fill(0, 80);
-    rect(0, 0, width, height);
-    pop();
+  let offsetX = (width - drawWidth) / 2;
+  let offsetY = (height - drawHeight) / 2;
+
+  image(bgGif, 0, 0, width, height);
+  image(mapImg, offsetX, offsetY, drawWidth, drawHeight);
+
+  for (let icon of icons) {
+    drawIcon(icon, offsetX, offsetY, drawWidth, drawHeight);
+  }
+}
+
+function drawIcon(icon, offsetX, offsetY, mapWidth, mapHeight) {
+
+  let img = icon.img;
+
+  let baseWidth = img.width * icon.scale;
+  let baseHeight = img.height * icon.scale;
+
+  let x = offsetX + mapWidth * icon.x;
+  let y = offsetY + mapHeight * icon.y;
+
+  let hovering =
+    mouseX > x &&
+    mouseX < x + baseWidth &&
+    mouseY > y &&
+    mouseY < y + baseHeight;
+
+  if (hovering) {
+    cursor(HAND);
+
+    noStroke();
+    fill(255, 230, 0, 90);
+    ellipse(
+      x + baseWidth / 2,
+      y + baseHeight / 2,
+      baseWidth * 1.3,
+      baseHeight * 1.3
+    );
+
+    tint(255, 255);
+    image(img, x, y, baseWidth, baseHeight);
+    noTint();
+
+  } else {
+    tint(255, 35);
+    image(img, x, y, baseWidth, baseHeight);
+    noTint();
   }
 }
 
 function mousePressed() {
-  if (hoveredCircle) clickedCircle = hoveredCircle;
+
+  let mapRatio = mapImg.width / mapImg.height;
+  let screenRatio = width / height;
+
+  let drawWidth, drawHeight;
+
+  if (screenRatio > mapRatio) {
+    drawHeight = height;
+    drawWidth = height * mapRatio;
+  } else {
+    drawWidth = width;
+    drawHeight = width / mapRatio;
+  }
+
+  let offsetX = (width - drawWidth) / 2;
+  let offsetY = (height - drawHeight) / 2;
+
+  for (let icon of icons) {
+
+    let baseWidth = icon.img.width * icon.scale;
+    let baseHeight = icon.img.height * icon.scale;
+
+    let x = offsetX + drawWidth * icon.x;
+    let y = offsetY + drawHeight * icon.y;
+
+    if (
+      mouseX > x &&
+      mouseX < x + baseWidth &&
+      mouseY > y &&
+      mouseY < y + baseHeight
+    ) {
+      window.location.href = icon.link;
+    }
+  }
 }
 
-function mouseReleased() {
-  clickedCircle = null;
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
 }

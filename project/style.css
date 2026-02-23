@@ -1,7 +1,9 @@
 body {
   margin: 0;
-  padding: 0;
   overflow: hidden;
-  font-family: monospace;
-  background-color: #0a1428; /* fallback dark blue */
+  background: black;
+}
+
+canvas {
+  display: block;
 }
